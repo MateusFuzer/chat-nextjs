@@ -100,7 +100,7 @@ function ChatItem({ chat, selected, onClick }: { chat: Chat; selected: boolean; 
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left relative ${
+      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left relative hover:cursor-pointer ${
         selected ? "bg-blue-50" : ""
       }`}
     >
