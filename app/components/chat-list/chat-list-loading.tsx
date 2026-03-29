@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function ChatListLoading() {
 
@@ -9,9 +9,11 @@ export default function ChatListLoading() {
         const height = document.getElementById("container-chat-list")?.clientHeight
 
         const itemHeight = 76;
-        const count = Math.floor(height / itemHeight);
-
-        setSkeletonCount(count);
+        if( height ){
+            const count = Math.floor(height / itemHeight);
+            setSkeletonCount(count);
+        }
+        
     }, []);
 
 

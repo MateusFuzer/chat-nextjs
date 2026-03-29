@@ -3,16 +3,26 @@
 import { useEffect, useState } from "react";
 import { CheckCheck, Search } from "lucide-react";
 import { getListChatListServices } from "./chat-list-services";
-import { Skeleton } from "@/components/ui/skeleton";
 import ChatListLoading from "./chat-list-loading";
-import { Google_Sans } from "next/font/google";
-const google_sans = Google_Sans({
-});
 
 type Props = {
   selectedId: string;
   onSelect: (id: string) => void;
 };
+
+type Chat = {
+  "id": number,
+  "name": string,
+  "online": boolean,
+  "color_profile": string,
+  "text_profile": string,
+  "lastMessage": string,
+  "lastMessageDate": string,
+  "typeLastMessage": string,
+  "unreadMessages": number,
+  "isLastMessageFromMe": boolean,
+  "isRead": boolean
+}
 
 const tabs = ["All Chats", "Groups", "Archived"];
 
@@ -22,7 +32,7 @@ export default function ChatList({ selectedId, onSelect }: Props) {
   const [ chatList, setChatList ] = useState([])
   const [ loadingGetChatList, setLoadingGetChatList ] = useState<boolean>( true )
 
-  const filtered = chatList.filter((c) =>
+  const filtered = chatList.filter((c: Chat) =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -49,11 +59,11 @@ export default function ChatList({ selectedId, onSelect }: Props) {
         (
         <>
           <div className="px-4 pt-5 pb-3">
-            <h1 className="text-lg font-semibold text-gray-800 mb-3">My Chats</h1>
+            <h1 className={`text-lg font-semibold text-gray-800 mb-3`}>My Chats</h1>
             <div className="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2">
               <Search className="w-4 h-4 text-gray-400" />
               <input
-                className="bg-transparent text-sm outline-none w-full text-gray-600 placeholder:text-gray-400"
+                className={`bg-transparent text-sm outline-none w-full text-gray-600 placeholder:text-gray-400`}
                 placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -66,7 +76,7 @@ export default function ChatList({ selectedId, onSelect }: Props) {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors${
                   activeTab === tab ? "bg-blue-50 text-blue-600" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
@@ -94,9 +104,6 @@ export default function ChatList({ selectedId, onSelect }: Props) {
 }
 
 function ChatItem({ chat, selected, onClick }: { chat: Chat; selected: boolean; onClick: () => void }) {
-  const color = `bg-[${chat.color_profile}]`;
-  console.log(color)
-
   return (
     <button
       onClick={onClick}
@@ -117,31 +124,27 @@ function ChatItem({ chat, selected, onClick }: { chat: Chat; selected: boolean; 
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
-          <span className={`text-sm font-semibold text-gray-800 truncate ${google_sans.className}`}>
+          <span className={`text-sm font-semibold text-gray-800 truncate`}>
             {chat.name}
-            {chat.pinned && <span className="ml-1 text-yellow-500">📌</span>}
           </span>
-          <span className="text-xs text-gray-400 shrink-0 ml-2">{chat.time}</span>
+          <span className="text-xs text-gray-400 shrink-0 ml-2">{chat.lastMessageDate}</span>
         </div>
         <div className="flex items-center justify-between mt-0.5">
           <div className="flex items-center gap-2">
             {chat.isLastMessageFromMe && chat.isRead &&  <CheckCheck size={14} color="#44ACFF"/> } 
             {chat.isLastMessageFromMe && !chat.isRead &&  <CheckCheck size={14}/> } 
-            <p className={`text-xs text-gray-500 truncate ${google_sans.className}`}>
+            <p className={`text-xs text-gray-500 truncate`}>
               {chat.lastMessage}
             </p>
            </div> 
          
-          {chat.unread > 0 && (
+          {chat.unreadMessages > 0 && (
             <span className="ml-2 shrink-0 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center">
-              {chat.unread}
+              {chat.unreadMessages}
             </span>
           )}
         </div>
-        <div className={`absolute text-[12px] top-2 right-2 ${google_sans.className}`}>{ chat.lastMessageDate}</div>
-
       </div>
-
     </button>
   );
 }
