@@ -1,30 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCheck, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { getListChatListServices } from "./chat-list-services";
 import ChatListLoading from "./chat-list-loading";
-
+import ChatItem from "./chat-item-list";
+import { Chat } from "../types/types";
 type Props = {
   selectedId: string;
-  onSelect: (id: string) => void;
+  onSelect: (chat: Chat) => void;
 };
 
-type Chat = {
-  "id": number,
-  "name": string,
-  "online": boolean,
-  "color_profile": string,
-  "text_profile": string,
-  "lastMessage": string,
-  "lastMessageDate": string,
-  "typeLastMessage": string,
-  "unreadMessages": number,
-  "isLastMessageFromMe": boolean,
-  "isRead": boolean
-}
-
-const tabs = ["All Chats", "Groups", "Archived"];
+const tabs = ["Todas conversas", "Grupos"];
 
 export default function ChatList({ selectedId, onSelect }: Props) {
   const [activeTab, setActiveTab] = useState("All Chats");
@@ -36,30 +23,26 @@ export default function ChatList({ selectedId, onSelect }: Props) {
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  async function teste(){
+  async function getListChatList(){
     var result = await getListChatListServices()
-    console.log( result )
     setChatList( result.data )
     setLoadingGetChatList( false )
   }
 
   useEffect( () => {
-    teste()
+    getListChatList()
   },[])
-
-
 
 
   return (
     <div className="w-80 bg-white border-r border-gray-100 flex flex-col shrink-0" id="container-chat-list">
-      
       <>
       { loadingGetChatList ? <ChatListLoading/>
         :
         (
         <>
           <div className="px-4 pt-5 pb-3">
-            <h1 className={`text-lg font-semibold text-gray-800 mb-3`}>My Chats</h1>
+            <h1 className={`text-lg font-semibold text-gray-800 mb-3`}>Meu Chat</h1>
             <div className="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2">
               <Search className="w-4 h-4 text-gray-400" />
               <input
@@ -86,12 +69,12 @@ export default function ChatList({ selectedId, onSelect }: Props) {
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {filtered.map((chat) => (
+            {filtered.map((chat: Chat) => (
               <ChatItem
                 key={chat.id}
                 chat={chat}
                 selected={chat.id === selectedId}
-                onClick={() => onSelect(chat.id)}
+                onClick={() => onSelect( chat )}
               />
             ))}
           </div>
@@ -103,48 +86,4 @@ export default function ChatList({ selectedId, onSelect }: Props) {
   );
 }
 
-function ChatItem({ chat, selected, onClick }: { chat: Chat; selected: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left relative hover:cursor-pointer ${
-        selected ? "bg-blue-50" : ""
-      }`}
-    >
-      <div className="relative shrink-0">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-semibold`}
-         style={{ backgroundColor: chat.color_profile }}
-        >
-          {chat.text_profile}
-        </div>
-        {chat.online && (
-          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
-        )}
-      </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <span className={`text-sm font-semibold text-gray-800 truncate`}>
-            {chat.name}
-          </span>
-          <span className="text-xs text-gray-400 shrink-0 ml-2">{chat.lastMessageDate}</span>
-        </div>
-        <div className="flex items-center justify-between mt-0.5">
-          <div className="flex items-center gap-2">
-            {chat.isLastMessageFromMe && chat.isRead &&  <CheckCheck size={14} color="#44ACFF"/> } 
-            {chat.isLastMessageFromMe && !chat.isRead &&  <CheckCheck size={14}/> } 
-            <p className={`text-xs text-gray-500 truncate`}>
-              {chat.lastMessage}
-            </p>
-           </div> 
-         
-          {chat.unreadMessages > 0 && (
-            <span className="ml-2 shrink-0 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center">
-              {chat.unreadMessages}
-            </span>
-          )}
-        </div>
-      </div>
-    </button>
-  );
-}

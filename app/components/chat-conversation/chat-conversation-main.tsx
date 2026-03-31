@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Phone,
@@ -14,34 +14,76 @@ import {
   Download,
   Play,
   CheckCheck,
+  LoaderIcon,
 } from "lucide-react";
-import { messages, chats, avatarColors } from "@/lib/mock-data";
+import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getListChatListServices } from "../chat-list/chat-list-services";
+import { getListChatMessagesServices } from "./chat-conversation-services";
+import { cn } from "@/lib/utils";
 
-type Props = { chatId: string };
+type Props = { 
+    userPhoto: string,
+    online: boolean,
+    color: string,
+    name: string,
+    text_profile: string
+    id: string
+ };
 
-export default function ChatWindow({ chatId }: Props) {
+ type file = {
+   name: string,
+   size: string,
+   ext: string
+ }
+
+ type video = {
+   duration: string,
+   caption: string
+ }
+
+ type messages = {
+    id: string ,
+    senderId: string ,
+    type: string,
+    time: string,
+    text?: string,
+    file?: file,
+    video?: video
+ }
+
+export default function ChatConversationMain({ userPhoto, online, color, name, text_profile, id }: Props) {
   const [input, setInput] = useState("");
-  const chat = chats.find((c) => c.id === chatId);
-  const color = avatarColors[chat?.avatar ?? ""] ?? "bg-gray-400";
+  const [ messages, setMessages ] = useState<messages[]>([])
+  const [ loadingGetMessages, setLoadingGetMessages ] = useState( false )
 
-  if (!chat) return null;
+  async function getListChatMessages(){
+    setLoadingGetMessages( true )
+    var messagesRequest = await getListChatMessagesServices()
+    setMessages( messagesRequest.data )
+    setLoadingGetMessages( false )
+  }
 
+  useEffect( () => {
+    if( id ){
+      getListChatMessages()
+    }
+  }, [ id ])
+  
   return (
     <div className="flex-1 flex flex-col bg-gray-50 min-w-0">
-      {/* Header */}
       <div className="bg-white border-b border-gray-100 px-5 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className={`w-10 h-10 rounded-full ${color} flex items-center justify-center text-white text-xs font-semibold`}>
-              {chat.avatar}
-            </div>
-            {chat.online && (
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
-            )}
-          </div>
+          <Avatar>
+           {userPhoto && <AvatarImage src={ userPhoto } alt="Foto do usuário" /> }
+            <AvatarFallback>{ text_profile }</AvatarFallback>
+          { online && <AvatarBadge className="bg-green-500 dark:bg-green-800" /> }
+          </Avatar>
           <div>
-            <p className="text-sm font-semibold text-gray-800">{chat.name}</p>
-            <p className="text-xs text-green-500">{chat.online ? "● Online" : "Offline"}</p>
+            <p className="text-sm font-semibold text-gray-800">{ name }</p>
+            <p className="text-xs">{ online ? 
+              <span className="text-green-500">● Online</span> : 
+              <span className="text-zinc-500">Offline</span>}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3 text-gray-400">
@@ -52,23 +94,32 @@ export default function ChatWindow({ chatId }: Props) {
           <button className="hover:text-gray-600"><MoreVertical className="w-5 h-5" /></button>
         </div>
       </div>
-
+      { loadingGetMessages &&
+        <div className="h-full w-full flex justify-center items-center">
+        <LoaderIcon
+              role="status"
+              aria-label="Loading"
+              className={cn("size-4 animate-spin")}
+            />
+        </div>  
+      }
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
+      { !loadingGetMessages && 
+       <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
         {messages.map((msg) => {
           const isMe = msg.senderId === "me";
 
           return (
             <div key={msg.id} className={`flex items-end gap-2 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
-              {/* Avatar */}
               {!isMe && (
-                <div className={`w-8 h-8 rounded-full ${color} flex items-center justify-center text-white text-xs font-semibold shrink-0`}>
-                  {chat.avatar}
-                </div>
+                <Avatar size="sm">
+                  {userPhoto && <AvatarImage src={ userPhoto } alt="Foto do usuário" /> }
+                  <AvatarFallback>{ text_profile }</AvatarFallback>
+                  { online && <AvatarBadge className="bg-green-500 dark:bg-green-800" /> }
+                </Avatar>
               )}
 
               <div className={`flex flex-col gap-1 max-w-sm ${isMe ? "items-end" : "items-start"}`}>
-                {/* File message */}
                 {msg.type === "file" && msg.file && (
                   <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl ${isMe ? "bg-blue-600 text-white" : "bg-white text-gray-800 shadow-sm"}`}>
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isMe ? "bg-blue-500" : "bg-blue-50"}`}>
@@ -87,7 +138,6 @@ export default function ChatWindow({ chatId }: Props) {
                   </div>
                 )}
 
-                {/* Video message */}
                 {msg.type === "video" && msg.video && (
                   <div className="rounded-2xl overflow-hidden bg-white shadow-sm">
                     <div className="relative w-64 h-40 bg-gray-700 flex items-center justify-center">
@@ -105,14 +155,12 @@ export default function ChatWindow({ chatId }: Props) {
                   </div>
                 )}
 
-                {/* Text message */}
                 {msg.type === "text" && msg.text && (
                   <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isMe ? "bg-blue-600 text-white rounded-br-sm" : "bg-white text-gray-800 shadow-sm rounded-bl-sm"}`}>
                     {msg.text}
                   </div>
                 )}
 
-                {/* Time + read */}
                 <div className={`flex items-center gap-1 ${isMe ? "flex-row-reverse" : ""}`}>
                   <span className="text-xs text-gray-400">{msg.time}</span>
                   {isMe && <CheckCheck className="w-3.5 h-3.5 text-blue-400" />}
@@ -121,9 +169,10 @@ export default function ChatWindow({ chatId }: Props) {
             </div>
           );
         })}
-      </div>
+      </div>}
 
       {/* Input */}
+     { !loadingGetMessages && 
       <div className="bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-3 shrink-0">
         <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600">
           <Plus className="w-5 h-5" />
@@ -141,6 +190,7 @@ export default function ChatWindow({ chatId }: Props) {
           <Send className="w-4 h-4" />
         </button>
       </div>
+     }
     </div>
   );
 }

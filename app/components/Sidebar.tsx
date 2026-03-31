@@ -1,13 +1,19 @@
 "use client";
 
 import { MessageSquare, Phone, Users, Settings, Moon, Globe } from "lucide-react";
+import Image from "next/image";
 
 export default function Sidebar() {
   return (
     <div className="w-14 bg-white border-r border-gray-100 flex flex-col items-center py-4 gap-2 shrink-0">
       {/* Logo */}
       <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
-        <MessageSquare className="w-5 h-5 text-white" />
+        <Image
+          src={"/icons8-wolf-32 -white.png"}
+          alt="Icone do lobo"
+          width={20}
+          height={20}
+        />
       </div>
 
       {/* Nav icons */}
