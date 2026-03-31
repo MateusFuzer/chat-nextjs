@@ -20,6 +20,7 @@ import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/u
 import { getListChatListServices } from "../chat-list/chat-list-services";
 import { getListChatMessagesServices } from "./chat-conversation-services";
 import { cn } from "@/lib/utils";
+import ChatErrorGetMessages from "./chat-conversation-error";
 
 type Props = { 
     userPhoto: string,
@@ -55,11 +56,30 @@ export default function ChatConversationMain({ userPhoto, online, color, name, t
   const [input, setInput] = useState("");
   const [ messages, setMessages ] = useState<messages[]>([])
   const [ loadingGetMessages, setLoadingGetMessages ] = useState( false )
+  const [ errorGetMessages, setErrorGetMessages ] = useState({
+    error: false,
+    message: ""
+  })
 
   async function getListChatMessages(){
+    if( errorGetMessages.error ){
+      setErrorGetMessages({
+        error: false,
+        message: ""
+      })
+    }
     setLoadingGetMessages( true )
     var messagesRequest = await getListChatMessagesServices()
-    setMessages( messagesRequest.data )
+    console.log(messagesRequest)
+    if( messagesRequest.error ){
+      setErrorGetMessages({
+        error: true,
+        message: messagesRequest.error
+      })
+    }
+    else{
+      setMessages( messagesRequest.data )
+    }
     setLoadingGetMessages( false )
   }
 
@@ -103,8 +123,14 @@ export default function ChatConversationMain({ userPhoto, online, color, name, t
             />
         </div>  
       }
+      {
+        !loadingGetMessages && errorGetMessages.error &&
+        <div className="h-full w-full flex justify-center items-center">
+            <ChatErrorGetMessages message={ errorGetMessages.message } cb={getListChatMessages}/>
+        </div>
+      }
       {/* Messages */}
-      { !loadingGetMessages && 
+      { !loadingGetMessages && !errorGetMessages.error &&
        <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
         {messages.map((msg) => {
           const isMe = msg.senderId === "me";
@@ -172,7 +198,7 @@ export default function ChatConversationMain({ userPhoto, online, color, name, t
       </div>}
 
       {/* Input */}
-     { !loadingGetMessages && 
+     { !loadingGetMessages && !errorGetMessages.error &&
       <div className="bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-3 shrink-0">
         <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600">
           <Plus className="w-5 h-5" />
